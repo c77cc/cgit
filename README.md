@@ -2,6 +2,8 @@
 
 [![Build Status](https://drone.io/github.com/c77cc/cgit/status.png)](https://drone.io/github.com/c77cc/cgit/latest)
 
+![image](https://github.com/c77cc/cgit/blob/master/example.gif)
+
 git command shortcuts
 
 ## Build
