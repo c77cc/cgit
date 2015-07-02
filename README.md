@@ -26,8 +26,8 @@ go build
 
 ## Example
 
-cgit status
-cgit checkout 0-2
-cgit reset HEAD 0,1
-cgit add 1,3
-...
+* cgit status
+* cgit checkout 0-2
+* cgit reset HEAD 0,1
+* cgit add 1,3
+* ...
