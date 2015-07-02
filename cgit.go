@@ -4,8 +4,8 @@ import(
     "fmt"
     "flag"
     "strconv"
-    //"log"
     "os"
+    "bytes"
     "strings"
 	"os/exec"
     fcolor "github.com/fatih/color"
@@ -225,12 +225,17 @@ func execAdd() (s []byte) {
 
 func doExecCommand(args ...string) (o []byte) {
     command := exec.Command(GIT_BIN, args...)
-    out, err := command.Output()
+    var out bytes.Buffer
+    var stderr bytes.Buffer
+
+    command.Stdout = &out
+    command.Stderr = &stderr
+    err := command.Run()
     if err != nil {
-        fmt.Println(err.Error())
-        return out
+        fmt.Println(string(stderr.Bytes()))
+        return
     }
-    return out
+    return out.Bytes()
 }
 
 func stringToInt(arg string) int {
