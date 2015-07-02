@@ -1,4 +1,4 @@
-## cgit
+## CGIT
 
 [![Build Status](https://drone.io/github.com/c77cc/cgit/status.png)](https://drone.io/github.com/c77cc/cgit/latest)
 
@@ -18,3 +18,11 @@ go build
 
 ./cgit --help
 ```
+
+## Example
+
+cgit status
+cgit checkout 0-2
+cgit reset HEAD 0,1
+cgit add 1,3
+...
