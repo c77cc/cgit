@@ -6,6 +6,9 @@
 
 git command shortcuts
 
+## Download
+1. [Mac OSX 64 bit](https://raw.githubusercontent.com/c77cc/cgit/master/cgit-macos-64bit)
+
 ## Build
 
 * Get source code from Github:
