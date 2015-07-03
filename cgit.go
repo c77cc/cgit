@@ -202,9 +202,13 @@ func execAdd() (s []byte) {
         return doExecCommand(args...)
     }
     var fileArr []string
-    _, committed, notStagedCommit, untracked := execStatus()
-    for i, line := range untracked {
-        idx := len(committed) + len(notStagedCommit) + i
+    _, _, notStagedCommit, untracked := execStatus()
+    arr := mergeStrArr(notStagedCommit, untracked)
+    for _, line := range arr {
+        idx, ok := getLineNum(line)
+        if !ok {
+            continue
+        }
         if inIntArray(idx, idxArr) {
             if file := getFilepath(line); len(file) > 0 {
                 fileArr = append(fileArr, path + "/" + file)
@@ -314,4 +318,26 @@ func getFilepath(line string) (file string) {
 
     file = strings.TrimSpace(file)
     return
+}
+
+func getLineNum(line string) (num int, ok bool) {
+    newline := strings.TrimLeft(line, "\t")
+    idx := newline[1:2]
+    if len(idx) < 1 {
+        return
+    }
+    return stringToInt(idx), true
+}
+
+func mergeStrArr(a []string, b []string, args ...[]string) (arr []string) {
+    arr = append(arr, a...)
+    arr = append(arr, b...)
+
+    if len(args) > 0 {
+        for i, _ := range args {
+            arr = append(arr, args[i]...)
+        }
+    }
+
+    return arr
 }
