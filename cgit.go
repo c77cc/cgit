@@ -38,7 +38,10 @@ func main() {
 func usage() {
     help := fmt.Sprintf("Usage: %s [command] [OPTIONS]\n\n", os.Args[0])
     help += fmt.Sprintf("command:\n")
-    help += fmt.Sprintf("\tall git support commands\n")
+    help += fmt.Sprintf("\tstatus, st\tshow the working tree status\n")
+    help += fmt.Sprintf("\tcheckout, co\tcheckout a branch or paths to the working tree\n")
+    help += fmt.Sprintf("\treset, re\treset current HEAD to the specified state\n")
+    help += fmt.Sprintf("\tadd\t\tadd file contents to the index\n")
     help += fmt.Sprintf("OPTIONS:\n")
     help += fmt.Sprintf("\t0,1\t\t0, 1 files will be apply your commmand\n")
     help += fmt.Sprintf("\t0-2\t\t0, 1, 2 files will be apply your commmand\n")
@@ -59,7 +62,7 @@ func execCommand(cmd string) {
     case "add":
         out = execAdd()
     default:
-        out = doExecCommand(flag.Args()...)
+        out = []byte("Unsupported command: " + cmd)
     }
     fmt.Println(string(out))
 }
@@ -67,11 +70,13 @@ func execCommand(cmd string) {
 func execStatus() (status []byte, committed, notStagedCommit, untracked []string) {
     out := doExecCommand("status")
 
-    var desc []string
-    var descs [][]string
-    var idx int
-    var state string
-    var newDesc bool = true
+    var (
+        desc []string
+        descs [][]string
+        idx int
+        state string
+        newDesc bool = true
+    )
 
     ret := strings.Split(string(out), "\n")
     for i, line := range ret {
@@ -144,8 +149,12 @@ func execCheckout() (s []byte) {
 
     var fileArr []string
     _, committed, notStagedCommit, _ := execStatus()
-    for i, line := range notStagedCommit {
-        idx := len(committed) + i
+    arr := mergeStrArr(committed, notStagedCommit)
+    for _, line := range arr {
+        idx, ok := getLineNum(line)
+        if !ok {
+            continue
+        }
         if inIntArray(idx, idxArr) {
             if file := getFilepath(line); len(file) > 0 {
                 fileArr = append(fileArr, path + "/" + file)
@@ -175,8 +184,11 @@ func execReset() (s []byte) {
     }
     var fileArr []string
     _, committed, _, _ := execStatus()
-    for i, line := range committed {
-        idx := i
+    for _, line := range committed {
+        idx, ok := getLineNum(line)
+        if !ok {
+            continue
+        }
         if inIntArray(idx, idxArr) {
             if file := getFilepath(line); len(file) > 0 {
                 fileArr = append(fileArr, path + "/" + file)
@@ -229,8 +241,10 @@ func execAdd() (s []byte) {
 
 func doExecCommand(args ...string) (o []byte) {
     command := exec.Command(GIT_BIN, args...)
-    var out bytes.Buffer
-    var stderr bytes.Buffer
+    var (
+        out bytes.Buffer
+        stderr bytes.Buffer
+    )
 
     command.Stdout = &out
     command.Stderr = &stderr
@@ -252,13 +266,13 @@ func isNumberic(arg string) bool {
     return err == nil
 }
 
-func inIntArray(find int, arr []int) bool {
+func inIntArray(find int, arr []int) (ok bool) {
     for i, _ := range arr {
         if find == arr[i] {
             return true
         }
     }
-    return false
+    return
 }
 
 func parseIndexOpts(opts string) (idxArr []int) {
@@ -276,7 +290,6 @@ func parseIndexOpts(opts string) (idxArr []int) {
             continue
         }
         if len(arr) == 2 && isNumberic(arr[0]) && isNumberic(arr[1]) {
-            //fmt.Println(optsArr[i] + " invalid, skiped")
             begin := stringToInt(arr[0])
             end   := stringToInt(arr[1])
             for k := begin; k <= end; k++ {
@@ -310,13 +323,9 @@ func makeDesc(desc []string, colors ...string) (str string) {
 }
 
 func getFilepath(line string) (file string) {
-    str := strings.TrimSpace(strings.Trim(line, "\t"))
-    strArr := strings.Split(str, "\t")
-    file = strArr[len(strArr)-1]
-    fileArr := strings.Split(file, ":")
-    file = fileArr[len(fileArr)-1]
-
-    file = strings.TrimSpace(file)
+    strArr := strings.Split(strings.TrimSpace(strings.Trim(line, "\t")), "\t")
+    fileArr := strings.Split(strArr[len(strArr)-1], ":")
+    file = strings.TrimSpace(fileArr[len(fileArr)-1])
     return
 }
 
