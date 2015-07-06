@@ -94,13 +94,13 @@ func execStatus() (status []byte, committed, notStagedCommit, untracked []string
             trimLine := strings.TrimSpace(strings.Trim(ret[i], "\t"))
             switch state {
             case "committed":
-                committed = append(committed, fmt.Sprintf("\t[%d]\t%s", idx, trimLine))
+                committed = append(committed, fmt.Sprintf("\t%d\t%s", idx, trimLine))
                 idx++
             case "notStagedCommit":
-                notStagedCommit = append(notStagedCommit, fmt.Sprintf("\t[%d]\t%s", idx, trimLine))
+                notStagedCommit = append(notStagedCommit, fmt.Sprintf("\t%d\t%s", idx, trimLine))
                 idx++
             case "untracked":
-                untracked = append(untracked, fmt.Sprintf("\t[%d]\t%s", idx, trimLine))
+                untracked = append(untracked, fmt.Sprintf("\t%d\t%s", idx, trimLine))
                 idx++
             }
             newDesc = true
@@ -330,12 +330,11 @@ func getFilepath(line string) (file string) {
 }
 
 func getLineNum(line string) (num int, ok bool) {
-    newline := strings.TrimLeft(line, "\t")
-    idx := newline[1:2]
-    if len(idx) < 1 {
+    arr := strings.Split(strings.TrimLeft(line, "\t"), "\t")
+    if len(arr) < 1 {
         return
     }
-    return stringToInt(idx), true
+    return stringToInt(arr[0]), true
 }
 
 func mergeStrArr(a []string, b []string, args ...[]string) (arr []string) {
