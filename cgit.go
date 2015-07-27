@@ -12,6 +12,7 @@ import(
 )
 
 var GIT_BIN string = "/usr/bin/git"
+var RM_BIN string = "/bin/rm"
 var path, _ = os.Getwd()
 var committedStr string = "Changes to be committed:"
 var notStagedCommitStr string = "Changes not staged for commit:"
@@ -61,6 +62,8 @@ func execCommand(cmd string) {
         out = execReset()
     case "add":
         out = execAdd()
+    case "rm":
+        out = execRemove()
     default:
         out = []byte("Unsupported command: " + cmd)
     }
@@ -239,8 +242,44 @@ func execAdd() (s []byte) {
     return
 }
 
+func execRemove() (s []byte) {
+    args := flag.Args()
+    idxArr := parseIndexOpts(flag.Arg(1))
+    if len(idxArr) < 1 {
+        return doExecCommand(args...)
+    }
+    var fileArr []string
+    _, _, notStagedCommit, untracked := execStatus()
+    arr := mergeStrArr(notStagedCommit, untracked)
+    for _, line := range arr {
+        idx, ok := getLineNum(line)
+        if !ok {
+            continue
+        }
+        if inIntArray(idx, idxArr) {
+            if file := getFilepath(line); len(file) > 0 {
+                fileArr = append(fileArr, path + "/" + file)
+            }
+        }
+    }
+    fmt.Println(fileArr)
+
+    if len(fileArr) < 1 {
+        return execSysCommand(RM_BIN, args...)
+    }
+
+    for _, file := range fileArr {
+        execSysCommand(RM_BIN, "-r", file)
+    }
+    return
+}
+
 func doExecCommand(args ...string) (o []byte) {
-    command := exec.Command(GIT_BIN, args...)
+    return execSysCommand(GIT_BIN, args...)
+}
+
+func execSysCommand(cmd string, args ...string) (o []byte) {
+    command := exec.Command(cmd, args...)
     var (
         out bytes.Buffer
         stderr bytes.Buffer
